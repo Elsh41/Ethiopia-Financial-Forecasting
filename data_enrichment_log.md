@@ -132,3 +132,37 @@ This log documents all new additions made to the baseline Ethiopia Financial Inc
 * **Pillar Constraint**: All `event` records explicitly have `pillar` set to `Null`.
 * **Relational Integrity**: All `impact_link` records successfully resolve to valid `parent_id` entries.
 * **Export Destination**: Processed dataset saved to `data/processed/ethiopia_fi_enriched_data.csv`.
+
+
+# 4. Data Enrichment & Quality Log
+
+## Overview
+This log documents the source integration, cleaning transformations, proxy indicator mappings, and record quality metrics applied to the Ethiopia Financial Inclusion dataset.
+
+---
+
+## Record Breakdown
+- **Total Records:** 47
+- **Observations:** 32
+- **Events:** 11
+- **Targets:** 3
+- **Impact Links:** 1
+
+## Confidence Assessment
+- **High Confidence:** 43 records (verified via World Bank Findex, NBE official reports, operator announcements)
+- **Medium Confidence:** 3 records (derived/estimated proxy values)
+- **Missing/Unrated:** 1 record
+
+---
+
+## Data Pipeline Transformations
+1. **Date Normalization:** Handled mixed ISO and standard date formats across `observation_date` (`YYYY-MM-DD` and `YYYY-MM-DD HH:MM:SS`).
+2. **Missing Value Handling:** Verified numerical indicators and standardized missing string entries.
+3. **Export Formats:** Maintained dual support for UTF-8 encoded `.csv` and `.xlsx` outputs in `data/processed/`.
+
+---
+
+## Key Indicator Coverage
+- `ACC_OWN_TOTAL`: Adult account ownership trajectory (2011, 2014, 2017, 2021, 2024).
+- `ACC_OWN_MALE` / `ACC_OWN_FEMALE`: Gender-disaggregated access metrics.
+- `EVENT_*`: Major policy and operator milestones (Telebirr launch May 2021, Safaricom Aug 2022, M-Pesa Aug 2023).

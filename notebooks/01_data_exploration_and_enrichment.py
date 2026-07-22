@@ -110,3 +110,10 @@ enriched_df = enrich_dataset(data_df, new_enrichment_data)
 os.makedirs(output_path.parent, exist_ok=True)
 enriched_df.to_csv(output_path, index=False)
 print("\nEnriched dataset successfully exported to {output_path}!")
+
+# Save as standard CSV
+output_path_csv = (
+    project_root / "data" / "processed" / "ethiopia_fi_enriched_data.csv"
+)
+enriched_df.to_csv(output_path_csv, index=False, encoding="utf-8")
+print(f"Enriched dataset successfully exported to {output_path_csv}!")
