@@ -9,6 +9,7 @@ ENV/
 
 # Data & Models (ignore raw/large artifacts if applicable)
 data/processed/*.csv
+data/processed/*.xlsx
 data/raw/*.xlsx
 !data/processed/.gitkeep
 models/*.pkl

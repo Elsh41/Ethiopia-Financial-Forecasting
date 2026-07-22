@@ -5,6 +5,7 @@ Modular utilities for loading, exploring, validating, and enriching
 Ethiopia Financial Inclusion (FI) unified time-series data.
 """
 
+from pathlib import Path
 from typing import Dict, Tuple
 import pandas as pd
 import numpy as np
@@ -14,30 +15,72 @@ class UnifiedDataLoader:
     """Handles loading and exploration of the Ethiopia FI unified dataset."""
 
     def __init__(self, unified_data_path: str, reference_codes_path: str):
-        self.unified_data_path = unified_data_path
-        self.reference_codes_path = reference_codes_path
+        self.unified_data_path = str(unified_data_path)
+        self.reference_codes_path = str(reference_codes_path)
         self.raw_data: Dict[str, pd.DataFrame] = {}
         self.ref_codes: pd.DataFrame = pd.DataFrame()
 
-    def load_datasets() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        """Loads sheet 1 (data), sheet 2 (impact_links), and reference codes.
+    def load_datasets(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """Loads main data, impact_links, and reference codes safely.
 
         Handles both Excel multi-sheet workbooks and CSV fallback formats.
         """
-        try:
-            # Try reading multi-sheet Excel file first
-            self.raw_data["data"] = pd.read_excel(
-                self.unified_data_path, sheet_name="data"
+        file_path = Path(self.unified_data_path)
+
+# 1. Process Excel Files (.xlsx, .xls)
+        if file_path.suffix in [".xlsx", ".xls"]:
+            excel_file = pd.ExcelFile(file_path)
+            sheet_names = excel_file.sheet_names
+
+            # Auto-detect main sheet
+            data_sheet = next(
+                (
+                    s
+                    for s in sheet_names
+                    if s.lower() in ["data", "sheet1", "sheet 1", "unified_data"]
+                ),
+                sheet_names[0],
             )
-            self.raw_data["impact_links"] = pd.read_excel(
-                self.unified_data_path, sheet_name="impact_links"
+            self.raw_data["data"] = pd.read_excel(file_path, sheet_name=data_sheet)
+
+            # Auto-detect impact_links sheet if present
+            impact_sheet = next(
+                (
+                    s
+                    for s in sheet_names
+                    if s.lower() in ["impact_links", "impact links", "sheet2"]
+                ),
+                None,
             )
-        except Exception:
-            # Fallback for CSV loading
-            self.raw_data["data"] = pd.read_csv(self.unified_data_path)
+            if impact_sheet:
+                self.raw_data["impact_links"] = pd.read_excel(
+                    file_path, sheet_name=impact_sheet
+                )
+            else:
+                self.raw_data["impact_links"] = pd.DataFrame()
+
+        # 2. Process CSV Files (.csv)
+        else:
+            try:
+                self.raw_data["data"] = pd.read_csv(file_path, encoding="utf-8")
+            except UnicodeDecodeError:
+                # Fallback encoding if file contains non-UTF8 characters
+                self.raw_data["data"] = pd.read_csv(
+                    file_path, encoding="latin1"
+                )
+
             self.raw_data["impact_links"] = pd.DataFrame()
 
-        self.ref_codes = pd.read_csv(self.reference_codes_path)
+# Load reference codes safely
+        ref_path = Path(self.reference_codes_path)
+        if ref_path.suffix in [".xlsx", ".xls"]:
+            self.ref_codes = pd.read_excel(ref_path)
+        else:
+            try:
+                self.ref_codes = pd.read_csv(ref_path, encoding="utf-8")
+            except UnicodeDecodeError:
+                self.ref_codes = pd.read_csv(ref_path, encoding="latin1")
+
         return (
             self.raw_data["data"],
             self.raw_data["impact_links"],

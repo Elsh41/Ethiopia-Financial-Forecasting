@@ -2,25 +2,30 @@ import os
 import sys
 from pathlib import Path
 
-# Dynamically add the 'src' directory to Python's search path
+# 1. Dynamically add the 'src' directory to Python's search path
 project_root = Path(__file__).resolve().parent.parent
 src_path = project_root / "src"
 if str(src_path) not in sys.path:
     sys.path.insert(0, str(src_path))
 
-    
+
 import pandas as pd
 from data_loader import UnifiedDataLoader, enrich_dataset
 
-# 1. Load Data
+# 2. Define absolute paths based on project root
+raw_data_path = project_root / "data" / "raw" / "ethiopia_fi_unified_data.xlsx"
+ref_codes_path = project_root / "data" / "raw" / "reference_codes.xlsx"
+output_path = project_root / "data" / "processed" / "ethiopia_fi_enriched_data.xlsx"
+
+# 3. Initialize DataLoader with absolute paths
 loader = UnifiedDataLoader(
-    unified_data_path="../data/raw/ethiopia_fi_unified_data.xlsx",
-    reference_codes_path="../data/raw/reference_codes.xlsx",
+    unified_data_path=str(raw_data_path),
+    reference_codes_path=str(ref_codes_path)
 )
 
 data_df, impact_links_df, ref_codes = loader.load_datasets()
 
-# 2. Explore Schema & Summary
+# 4. Explore Schema & Summary
 summary = loader.explore_summary(data_df)
 print("=== RECORD TYPE DISTRIBUTION ===")
 print(summary.get("record_type"))
@@ -31,7 +36,7 @@ print(summary.get("pillar"))
 print("\n=== CONFIDENCE DISTRIBUTION ===")
 print(summary.get("confidence"))
 
-# 3. New Enrichment Records (Task 1 Requirement)
+# 5. New Enrichment Records (Task 1 Requirement)
 new_enrichment_data = [
     # New Observation: Global Findex Gender Disaggregation (2024)
     {
@@ -100,10 +105,8 @@ new_enrichment_data = [
     },
 ]
 
-# 4. Enrich & Export Dataset
+# 6. Enrich & Export Dataset
 enriched_df = enrich_dataset(data_df, new_enrichment_data)
-os.makedirs("../data/processed", exist_ok=True)
-enriched_df.to_csv(
-    "../data/processed/ethiopia_fi_enriched_data.csv", index=False
-)
-print("\nEnriched dataset successfully exported to data/processed/!")
+os.makedirs(output_path.parent, exist_ok=True)
+enriched_df.to_csv(output_path, index=False)
+print("\nEnriched dataset successfully exported to {output_path}!")
